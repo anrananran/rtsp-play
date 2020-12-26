@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测试m3u8</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chimee-mobile-player@0.2.8/lib/chimee-mobile-player.browser.css">
+  <script src="https://cdn.jsdelivr.net/npm/chimee-mobile-player@0.2.8/lib/chimee-mobile-player.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chimee-kernel-hls@1.3.2/lib/index.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@3.0.4/dist/socket.io.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+    }
+    .video-player {
+      width: 100%;
+      height: 100vh;
+    }
+    .video-player .loading {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 16px;
+      line-height: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div id="player" class="video-player">
+    <div id="loading" class="loading">
+      <img src="./loading.gif" alt="">
+      <span>转码中，请稍后</span>
+    </div>
+  </div>
+
+  <script>
+    function initSocket(rtspURL) {
+      var socket = io('ws://192.168.1.23:3000') 
+      socket.on('play', (url) => {
+        console.log('转码成功，hls地址', url)
+        document.querySelector('#loading').style.display = 'none'
+        console.log('是否支持MSE：' + ChimeeKernelHls.isSupport())
+        new ChimeeMobilePlayer({
+          wrapper: '#player',
+          src: url,
+          box: ChimeeKernelHls.isSupport() ? 'hls' : 'native',
+          isLive: true,
+          autoplay: true,
+          controls: true,
+          playsInline: true,
+          preload: 'auto',
+          x5VideoPlayerFullscreen: true,
+          x5VideoOrientation: true,
+          xWebkitAirplay: true,
+          muted: true,
+          kernels: {
+            hls: ChimeeKernelHls
+          }
+        })
+      })
+      socket.emit('transcode', { rtspURL })
+    }
+    
+    function getQueryString(name) {
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)")
+      var r = window.location.search.substr(1).match(reg)
+      if(r != null) {
+        return decodeURIComponent(r[2])
+      }
+      return ''
+    }
+    
+    var rtspURL1 = 'rtsp://118.24.181.227:101/SMSEurl/EQGwABB7%2BsvfvTf4Y7VVU8LS1jyqmySWNnk9%2FllBtOlZT3aObpnhmcRYh6I6FufxnyWUa3GWWLRRT95%2B2GD7vXzPWHDKlH2%2B3BThxZHobRGdpfL5%2F9wMw%2Fx3nIR0UOjPtyNkbVOHWflajqq4WqTRqK4qc8kNdcK7hjPBiAYnGDX5l0gXGetuxad8P4t%2F4DZvdW4fOdumuhhPxIIPSPYUqQhGUFZywOzSU2OXxUsYSAAC6fxI9ldYPqRA6YX%2BTiCCR5AtIVzH2VJhIXiaucHCrA3fCI6yZcgk4US94dErsJ%2Fp21rwKPRTlzYvY8tStXOd0MvtTN8Plmwd3d3kPOVOrn7AVl9s7y6gvd6S5GYdyv%2BjHROyM%2Bcs2IbtlbHXlHUP1xnZG7lcEoUnVFfEkB6cNUmEFmdea9O0ZhOisPqwm0xXRpzlCJjpIQ5hvSd4lszj3uszQqf69%2By0jU6jw38ZcBEQ4HTms5C3uDXXPz562fTBvUZqIGS6ftZgD%2FDpVQNH5hLlQ36DQKhnowrYDjdxZcoOCfX4awwPu1OPHfHJoAqmKm0L3IUOCc3iYsBWOhxS0cDXviLpgBKJCKOtvJawnygo47aRnMP4iv1lB1BWww7rTCEO'
+
+    var rtspURL2 = 'rtsp://118.24.181.227:101/SMSEurl/EQGwAMrmvbGayGppw2mp1SmjzXbXtRW7P%2BD9Igncy77VGPZO5tb%2BqS9IOeW%2FexeD7D%2Bn9volqAP7cNk3gjYcNrvELwgXEgYopbqhtwx6S%2FEOuRIdG0o0gTiLBn5AHGANS4mL9RKcX6t66Qgb5fHnyf1kiWvP%2Be0MtMMk%2BrPPxluWXupvrd5MNPziyDOqMp8cpUCLdABeXpN5dJ6xHypuSkZKGQPmBfUtA7%2BP1IDMtep2BCtjOdD8FQbMxFZmgq9n2p7GuQqhvs1QgmPmbsetIVRzMvlcng52mmSdVgI%2BLNz0uODKWLdcTqN%2FUH%2FhsQf8Ngsu2l7uUcjZrcwVRZa9izL1bqEMFhlQlPQj1nKnH35bTJgb9c0y2groQJyLSWRlhK2Uxbm%2FiJXlNei91SXtH1KPTePaSKO%2F9cvpIADOhPX5dBvJ%2ByQQcgcLabLTE9S7pbKHl1LmTAjNkUTGp3hg5dvQdo5apA7hcniU79Rzl%2BYzqOTlb3Qb9mcaUsFr9nVqogFEZniiTjwpn2udnToWSUDS9Mv78AYBPg2UdKioLuctrfIKsdSdAu9MwPVHYyQyoRYYw%2FXlRnnEsMtYBM0jEPwF5WvdIbCH7nB0qz63ubXBnFhn'
+
+    initSocket(window['rtspURL' + getQueryString('type')] || rtspURL1)
+  </script>
+</body>
+</html>
